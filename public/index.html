@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Core | API Tester</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #38bdf8;
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Abstract background blobs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -10%;
+            left: -10%;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        header {
+            width: 100%;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        h1 {
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            padding: 3rem 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: var(--text);
+            font-family: inherit;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+            transform: scale(1.02);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .console {
+            background: #000;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            border-left: 2px solid var(--accent);
+            padding-left: 0.5rem;
+        }
+
+        .log-time { color: var(--text-secondary); margin-right: 0.5rem; }
+        .log-success { color: var(--success); }
+        .log-error { color: var(--error); }
+
+        .task-list {
+            margin-top: 1.5rem;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent);
+        }
+
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card { animation: fadeIn 0.5s ease-out forwards; }
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Enterprise Core API Dashboard</h1>
+    </header>
+
+    <div class="container">
+        <!-- Auth Card -->
+        <div class="card">
+            <h2>🔐 Identity Provisioning</h2>
+            <div class="form-group">
+                <label for="reg-username">Username</label>
+                <input type="text" id="reg-username" placeholder="admin" value="admin">
+            </div>
+            <div class="form-group">
+                <label for="reg-password">Password</label>
+                <input type="password" id="reg-password" placeholder="••••••••" value="password123">
+            </div>
+            <button onclick="register()">Execute Registration</button>
+        </div>
+
+        <!-- Task Creation Card -->
+        <div class="card">
+            <h2>🛠️ Task Management</h2>
+            <div class="form-group">
+                <label for="task-title">Task Title</label>
+                <input type="text" id="task-title" placeholder="Architectural Review">
+            </div>
+            <button onclick="createTask()">Initialize Task</button>
+        </div>
+
+        <!-- Console Card -->
+        <div class="card full-width">
+            <h2>🖥️ System Logs</h2>
+            <div id="console" class="console">
+                <div class="log-entry"><span class="log-time">11:53:28</span> <span class="log-success">System operational. Ready for testing.</span></div>
+            </div>
+        </div>
+
+        <!-- Task Registry -->
+        <div class="card full-width">
+            <h2>📋 Task Registry</h2>
+            <button style="width: auto; margin-bottom: 1rem;" onclick="refreshTasks()">Refresh Registry</button>
+            <div id="task-registry" class="task-list">
+                <div style="color: var(--text-secondary); text-align: center; padding: 1rem;">No tasks synchronized.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authHeader = null;
+
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            div.innerHTML = `<span class="log-time">${time}</span> <span class="log-${type}">${message}</span>`;
+            console.prepend(div);
+        }
+
+        async function register() {
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+
+            log(`Attempting registration for ${username}...`);
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    log(`Registration successful: ${data.message}`, 'success');
+                    // Automatically set up auth header for subsequent calls
+                    const encoded = btoa(`${username}:${password}`);
+                    authHeader = { 'Authorization': `Basic ${encoded}` };
+                    log('Auth context established.', 'success');
+                } else {
+                    log(`Registration failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (err) {
+                log(`Network error: ${err.message}`, 'error');
+            }
+        }
+
+        async function createTask() {
+            if (!authHeader) {
+                log('Authentication required. Please register or login first.', 'error');
+                return;
+            }
+
+            const title = document.getElementById('task-title').value;
+            if (!title) return;
+
+            log(`Creating task: ${title}...`);
+            try {
+                const res = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: { ...authHeader, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    log(`Task created with ID: ${data.id}`, 'success');
+                    document.getElementById('task-title').value = '';
+                    refreshTasks();
+                } else {
+                    log(`Task creation failed: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                log(`Network error: ${err.message}`, 'error');
+            }
+        }
+
+        async function refreshTasks() {
+            if (!authHeader) {
+                log('Authentication required to fetch registry.', 'error');
+                return;
+            }
+
+            log('Synchronizing task registry...');
+            try {
+                const res = await fetch('/api/tasks', { headers: authHeader });
+                const tasks = await res.json();
+
+                const registry = document.getElementById('task-registry');
+                registry.innerHTML = '';
+
+                if (tasks.length === 0) {
+                    registry.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 1rem;">No tasks found.</div>';
+                    return;
+                }
+
+                tasks.forEach(task => {
+                    const div = document.createElement('div');
+                    div.className = 'task-item';
+                    div.innerHTML = `
+                        <span>${task.title}</span>
+                        <span class="status-badge ${task.completed ? 'completed' : ''}">${task.completed ? 'COMPLETED' : 'PENDING'}</span>
+                    `;
+                    registry.appendChild(div);
+                });
+                log(`Registry synchronized: ${tasks.length} items.`, 'success');
+            } catch (err) {
+                log(`Sync error: ${err.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
